@@ -5,8 +5,9 @@ import numpy as np
 from tqdm import tqdm
 
 # Get cpu or gpu device for training.
-device = "cuda" if pt.cuda.is_available() else "cpu"
-print(f"Using {device} device")
+# device = "cuda" if pt.cuda.is_available() else "cpu"
+# print(f"Using {device} device")
+device = "cpu"
 
 genome_scores = dt.fread("./ml-25m/genome-scores.csv")
 genome_tags = dt.fread("./ml-25m/genome-tags.csv")
@@ -36,13 +37,12 @@ for k in tqdm(range(ratings.shape[0])):
     MxU[midx, uidx] = ratings[k, "rating"]
 
 pt.save(MxU, "SAVES/ItemBasedCF_gpu/MxU.pt")
-MxU = MxU.to(device)
+# MxU = MxU.to(device)
 
-h = pt.tensor(5).to(device)
+h = pt.tensor(5)  # .to(device)
 nM = pt.linalg.norm(MxU, dim=1).reshape(nm, 1)
 nMxM = nM @ nM.T
 pt.save(nMxM.to("cpu"), "SAVES/ItemBasedCF_gpu/nMxM.pt")
 
 similarity = (MxU @ MxU.T) * pt.reciprocal(nMxM.add(h))
 pt.save(similarity, "SAVES/ItemBasedCF_gpu/similarity.pt")
-
