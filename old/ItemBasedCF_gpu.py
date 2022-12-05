@@ -29,20 +29,20 @@ pt.save(mid_midx, "SAVES/ItemBasedCF_gpu/mid_midx.pt")
 pt.save(midx_mid, "SAVES/ItemBasedCF_gpu/midx_mid.pt")
 
 nu = dt.unique(ratings["userId"]).shape[0]
-print("size:", (nm, nu))
-MxU = pt.zeros((nm, nu))
+print("size:", (nu, nm))
+UxM = pt.zeros((nu, nm))
 for k in tqdm(range(ratings.shape[0])):
     midx = mid_midx[ratings[k, "movieId"]]
     uidx = ratings[k, "userId"] - 1
-    MxU[midx, uidx] = ratings[k, "rating"]
+    UxM[uidx, midx] = ratings[k, "rating"]
 
-pt.save(MxU, "SAVES/ItemBasedCF_gpu/MxU.pt")
+pt.save(UxM, "SAVES/ItemBasedCF_gpu/UxM.pt")
 # MxU = MxU.to(device)
 
 h = pt.tensor(5)  # .to(device)
-nM = pt.linalg.norm(MxU, dim=1).reshape(nm, 1)
+nM = pt.linalg.norm(UxM, dim=2).reshape(nm, 1)
 nMxM = nM @ nM.T
 pt.save(nMxM.to("cpu"), "SAVES/ItemBasedCF_gpu/nMxM.pt")
 
-similarity = (MxU @ MxU.T) * pt.reciprocal(nMxM.add(h))
+similarity = (UxM.T @ UxM) * pt.reciprocal(nMxM.add(h))
 pt.save(similarity, "SAVES/ItemBasedCF_gpu/similarity.pt")
